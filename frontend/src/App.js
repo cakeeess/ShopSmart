@@ -4,39 +4,89 @@ import { useNavigate } from "react-router-dom";
 import "./App.css";
 import shopSmartImage from "./shopsmart.png";
 
+import React, { useState, useEffect } from "react";
+import { FaSearch } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+import "./App.css";
+import shopSmartImage from "./shopsmart.png";
+
 const App = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [minPrice, setMinPrice] = useState("");
-  const [maxPrice, setMaxPrice] = useState("");
+  // Set sample values explicitly for testing
+  const [searchTerm, setSearchTerm] = useState("one plus 6T");
+  const [minPrice, setMinPrice] = useState("30000");
+  const [maxPrice, setMaxPrice] = useState("40000");
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
-  const handlePriceInput = (e, type) => {
-    let value = e.target.value;
-    if (value < 0) value = 0;
-    if (!/^\d*$/.test(value)) return;
-    type === "min" ? setMinPrice(value) : setMaxPrice(value);
-  };
 
-  const handleSearch = () => {
+// Load saved values (but don't auto-search) when component mounts
+useEffect(() => {
+  const savedSearchTerm = localStorage.getItem("searchTerm");
+  const savedMinPrice = localStorage.getItem("minPrice");
+  const savedMaxPrice = localStorage.getItem("maxPrice");
+
+  if (savedSearchTerm) setSearchTerm(savedSearchTerm);
+  if (savedMinPrice) setMinPrice(savedMinPrice);
+  if (savedMaxPrice) setMaxPrice(savedMaxPrice);
+}, []);
+
+
+const handlePriceInput = (e, type) => {
+  let value = e.target.value;
+  if (value < 0) value = 0;
+  if (!/^\d*$/.test(value)) return;
+
+  if (type === "min") {
+    setMinPrice(value);
+    localStorage.setItem("minPrice", value);
+  } else {
+    setMaxPrice(value);
+    localStorage.setItem("maxPrice", value);
+  }
+};
+
+  const handleSearch = async () => {
     if (!searchTerm || !minPrice || !maxPrice) {
       alert("Please fill in all fields before searching!");
       return;
     }
-
+  
     setLoading(true);
-
-    // Store user input if needed later (optional)
-    localStorage.setItem("searchTerm", searchTerm);
-    localStorage.setItem("minPrice", minPrice);
-    localStorage.setItem("maxPrice", maxPrice);
-
-    setTimeout(() => {
+  
+    try {
+      const response = await fetch("http://localhost:5000/save-search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          searchQuery: searchTerm,
+          minPrice,
+          maxPrice,
+        }),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        console.log("Data saved to Flask:", data);
+        navigate("/results");
+      } else {
+        alert("Error from backend: " + data.error);
+      }
+    } catch (error) {
+      alert("Connection error: " + error.message);
+    } finally {
       setLoading(false);
-      navigate("/results");
-    }, 2000);
+    }
   };
+  
+  // Automatically trigger search on component mount for testing
+  useEffect(() => {
+    handleSearch();
+  }, []);
+
   return (
     <div className="container">
       {loading && (
