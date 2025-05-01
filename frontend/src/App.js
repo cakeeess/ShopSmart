@@ -24,18 +24,38 @@ const App = () => {
       alert("Please fill in all fields before searching!");
       return;
     }
-
+  
     setLoading(true);
-
-    // Store user input if needed later (optional)
-    localStorage.setItem("searchTerm", searchTerm);
-    localStorage.setItem("minPrice", minPrice);
-    localStorage.setItem("maxPrice", maxPrice);
-
-    setTimeout(() => {
-      setLoading(false);
-      navigate("/results");
-    }, 2000);
+  
+    const searchData = {
+      searchQuery: searchTerm,
+      minPrice: minPrice,
+      maxPrice: maxPrice,
+    };
+  
+    fetch("http://127.0.0.1:5000/save-search", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(searchData),
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch search results");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Search saved:", data);
+        setLoading(false);
+        navigate("/results");
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+        setLoading(false);
+        alert("Something went wrong while fetching results.");
+      });
   };
 
   return (

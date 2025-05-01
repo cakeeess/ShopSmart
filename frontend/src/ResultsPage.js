@@ -4,16 +4,17 @@ const ResultsPage = () => {
   const [products, setProducts] = useState([]);
 
   useEffect(() => {
-    fetch("/api_results.json")
+    // ✅ Fetch data from the API results JSON file
+    fetch("/api_results.json") // The path to api_results.json
       .then((res) => res.json())
       .then((data) => {
-        setProducts(data);
+        setProducts(data); // Set the fetched data to the state
       })
-      .catch((err) => console.error("Error loading data:", err));
-  }, []);
+      .catch((err) => console.error("Error loading data:", err)); // Handle any error that occurs during fetching
+  }, []); // Empty dependency array, so this runs only once when the component is mounted
 
   const handleBack = () => {
-    window.location.href = "/";
+    window.location.href = "/"; // Navigate back to the homepage when back button is clicked
   };
 
   return (
@@ -25,6 +26,7 @@ const ResultsPage = () => {
 
       <h1 className="results-title">Top Results</h1>
       <div className="grid">
+        {/* ✅ Displaying the products dynamically */}
         {products.map((item, index) => (
           <div className="product-card" key={index}>
             <h2>{item.title}</h2>
