@@ -37,7 +37,6 @@ const App = () => {
       navigate("/results");
     }, 2000);
   };
-
   return (
     <div className="container">
       {loading && (
