@@ -1,76 +1,87 @@
 from serpapi import GoogleSearch
 import json
 import re
+from dotenv import load_dotenv
 import os
+
+load_dotenv()
+api_key = os.getenv('API_KEY')
 
 def search_prod(query):
     params = {
-        "engine": "google_shopping",
-        "q": query,
-        "api_key": "4e9f647b16dfb41ea8f762ea32fcdd25d104382d9e1fed6b7c9bcbc06e770570",  # Replace with your actual API key
-        "tbm": "shop",
-        "gl": "in"
+      "engine": "google_shopping",
+      "q": query,
+      "api_key": api_key,
+      "tbm": "shop",
+      "gl":"in"
     }
     search = GoogleSearch(params)
-    result = search.get_dict()
-    print("API response:", result)  # Check the full response from the API
-    return result
+    rslt = search.get_dict()
+    return rslt
 
 def send_query(query):
-    print("Received query:", query)
+    print("received query for "+query)
     results = search_prod(query)
-    return results.get("shopping_results", [])
+    if "shopping_results" in results:
+        return results["shopping_results"]
+    else:
+        print(f"No results found for query: {query}")
+        return []  # Return an empty list if no results found
 
-def filter_products(results, max_price):
-    print("Filtering products below ₹", max_price)
-    filtered = []
-
+# Extract and filter the title, price, product link, and seller name for each product within the price range
+def display_result(results,price_range):
+    print(f"max_price received as : {price_range[1]}")
+    print(f"min_price received as : {price_range[0]}")
+    max_price = price_range[1]
+    min_price = price_range[0]
+    filtered_products = []
     for product in results:
         title = product.get("title")
         price = product.get("price")
         link = product.get("product_link")
         seller = product.get("source")
 
-        # Parse numeric price
-        if isinstance(price, str) and "₹" in price:
-            match = re.search(r'[\d,.]+', price)
-            price_val = float(match.group().replace(",", "")) if match else 0.0
+        # Extract numeric value from price string
+        if isinstance(price, str) and price:  # Check if price is a valid string
+            price_match = re.search(r'[\d,.]+', price)  # Match numeric values
+            price_value = float(price_match.group().replace(',', '').strip()) if price_match else 0.0
         else:
-            price_val = 0.0
+            price_value = 0.0  # Default value if price is not valid
 
-        if price_val <= max_price:
-            filtered.append({
+        if price_value <= max_price and price_value > min_price:
+            filtered_products.append({
                 "title": title,
-                "price": price,
+                "price": int(price_value),  # Store as an integer value
                 "link": link,
                 "seller": seller
             })
+    if filtered_products:
+        print(f"Products found")
+    return filtered_products
 
-    if not filtered:
-        print("No products found within the price range.")
-    return filtered
+def save_results_to_json(filtered_products):
+    # Load existing data if the file exists
+    try:
+        with open('api_results.json', 'r') as json_file:
+            existing_data = json.load(json_file)
+    except FileNotFoundError:
+        existing_data = []
 
-def save_results_to_json(data):
-    os.makedirs('data', exist_ok=True)  # Ensure 'data' folder exists
-    with open('data/api_results.json', 'w') as f:
-        json.dump(data, f, indent=2)
+    # Append new results to existing data
+    existing_data.extend(filtered_products)
+
+    # Save the updated results to the JSON file
+    with open('api_results.json', 'w') as json_file:
+        json.dump(existing_data, json_file, indent=4)
 
 def main():
-    # Define the products and their max prices to search for
-    query = {
-        "iphone 15": 70000.00,  # Max price for iPhone 15
-        "apple watch series 9": 40000.00  # Max price for Apple Watch Series 9
-    }
+    query = {"one plus 6T": [20000.00 , 40000.00], "apple watch series 9": [30000.00 , 40000.00]}
+    all_filtered_products = []  # List to accumulate all filtered products
+    for p in query:
+        results = send_query(p)
+        filtered_products = display_result(results, query[p])
+        all_filtered_products.extend(filtered_products)  # Accumulate filtered products
+    # Save all filtered products to JSON once after processing all queries
+    save_results_to_json(all_filtered_products)
 
-    # Iterate through each product to search and filter results
-    for product, max_price in query.items():
-        results = send_query(product)  # Search for the product
-        filtered_products = filter_products(results, max_price)  # Filter based on max price
-        if filtered_products:  # If there are filtered products
-            save_results_to_json(filtered_products)  # Save them to JSON file
-            print(f"Results saved for {product}")
-        else:
-            print(f"No products found for {product}")
-
-# Run the scraper
 main()
