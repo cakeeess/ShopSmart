@@ -9,7 +9,6 @@ from datetime import datetime
 app = Flask(__name__)
 CORS(app)  # Allow cross-origin requests from React (like localhost:3000)
 
-
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///searches.db'
 db = SQLAlchemy(app)
 
