@@ -3,6 +3,9 @@
 ![Python](https://img.shields.io/badge/Backend-Python-blue?logo=python)
 ![React](https://img.shields.io/badge/Frontend-React-blue?logo=react)
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen)
+![Flask](https://img.shields.io/badge/Framework-Flask-black?logo=flask)
+
+
 
 
 **ShopSmart** is a full-stack smart buying web application that helps users find the best-priced products online. Enter your desired product and price range—ShopSmart will do the rest, using real-time scraping to find great deals! 🎯
