@@ -8,8 +8,7 @@ import os
 app = Flask(__name__)
 CORS(app)  # Allow React frontend to talk to this backend
 
-SERP_API_KEY = "4e9f647b16dfb41ea8f762ea32fcdd25d104382d9e1fed6b7c9bcbc06e770570"
-
+SERP_API_KEY = API_KEY
 # Define the path for the API results file
 API_RESULTS_PATH = os.path.join(app.root_path, 'backend', 'api_results.json')
 
